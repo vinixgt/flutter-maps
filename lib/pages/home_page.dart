@@ -8,8 +8,8 @@ import '../utils/map_style.dart';
 
 
 class HomePage extends StatefulWidget {
-  HomePage
-({Key key}) : super(key: key);
+
+  static const routeName = 'home-page';
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -27,7 +27,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    super.initState();
     this._init();
+    print('============ hola mundo.....');
   }
 
   Future <GoogleMapController> get _mapController async {
