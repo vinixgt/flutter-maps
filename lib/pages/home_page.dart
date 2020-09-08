@@ -1,10 +1,8 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutter_maps/utils/map_style.dart';
-import '../utils/map_style.dart';
+import 'package:flutter_maps/blocs/pages/home/bloc.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -18,44 +16,62 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   //14.4843093,-90.6206226
 
-  final Completer<GoogleMapController> _completer = Completer();
+  final HomeBloc _bloc = HomeBloc();
 
-  final CameraPosition _initialPosition = CameraPosition(
-    target: LatLng(14.4843093, -90.6206226),
-    zoom: 16,
-  );
+  
 
   @override
   void initState() {
     super.initState();
-    this._init();
     print('============ hola mundo.....');
   }
 
-  Future <GoogleMapController> get _mapController async {
-    return await _completer.future;
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
   }
 
-  _init() async {
-    (await _mapController).setMapStyle(jsonEncode(mapStyle));
-  }
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        child: GoogleMap(
-          initialCameraPosition: _initialPosition,
-          zoomControlsEnabled: false,
-          compassEnabled: true,
-          onMapCreated: (GoogleMapController controller) {
-            _completer.complete(controller);
-            //controller.setMapStyle(jsonEncode(mapStyle));
-          },
-        )
-      )
+    return BlocProvider.value(
+      value: this._bloc,
+      child: Scaffold(
+        body: SafeArea(
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: BlocBuilder<HomeBloc, HomeState>(
+              builder: (_, HomeState state) {
+                if(state.loading) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      backgroundColor: Colors.red,
+                    ),
+                    
+                  );
+                }
+                final CameraPosition _initialPosition = CameraPosition(
+                  target: state.myLocation,
+                  zoom: 16,
+                );
+                return GoogleMap(
+                  initialCameraPosition: _initialPosition,
+                  zoomControlsEnabled: false,
+                  compassEnabled: true,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  onMapCreated: (GoogleMapController controller) {
+                    this._bloc.setMapController(controller);
+                  },
+                );
+              }
+            ),
+          ),
+        ),
+      ),
     );
   }
-}
+} // class
