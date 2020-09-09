@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_maps/utils/extras.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -64,6 +66,8 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
           title: 'Hello world ${markerId.value}',
           snippet: 'La direccion etc.',
         );
+        final Uint8List pinImage = await loadAsset('assets/car-pin.png', height: 100, width: 50);
+        final customIcon = BitmapDescriptor.fromBytes(pinImage);
         final marker = Marker(
           markerId: markerId,
           position: event.location,
@@ -75,6 +79,8 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
             print('```````````````````````` ${markerId.value} new position $newPosition');
           },
           infoWindow: info,
+          icon: customIcon,
+          anchor: Offset(0.5, 0.5),
         );
 
         final markers = Map<MarkerId, Marker>.from(this.state.markers);
