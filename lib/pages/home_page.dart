@@ -44,6 +44,14 @@ class _HomePageState extends State<HomePage> {
             height: double.infinity,
             child: BlocBuilder<HomeBloc, HomeState>(
               builder: (_, HomeState state) {
+                if(!state.gpsEnabled) {
+                  return Center(
+                    child: Text(
+                      'Debes activar el GPS para utilizar la app.',
+                      textAlign: TextAlign.center,
+                    )
+                  );
+                }
                 if(state.loading) {
                   return Center(
                     child: CircularProgressIndicator(
