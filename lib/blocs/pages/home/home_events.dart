@@ -4,5 +4,10 @@ abstract class HomeEvents {}
 
 class OnMyLocationUpdate extends HomeEvents {
   final LatLng location;
-  OnMyLocationUpdate(this.location){}
+  OnMyLocationUpdate(this.location);
+}
+
+class OnMapTap extends HomeEvents {
+  final LatLng location;
+  OnMapTap(this.location);
 }

@@ -23,7 +23,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    print('============ hola mundo.....');
   }
 
   @override
@@ -66,6 +65,10 @@ class _HomePageState extends State<HomePage> {
                   onMapCreated: (GoogleMapController controller) {
                     this._bloc.setMapController(controller);
                   },
+                  onTap: (position) {
+                    this._bloc.add(OnMapTap(position));
+                  },
+                  markers: state.markers.values.toSet(),
                 );
               }
             ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:flutter/rendering.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -47,7 +48,7 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
 
   @override
   // ignore: override_on_non_overriding_member
-  HomeState get initialState => HomeState();
+  HomeState get initialState => HomeState.initialState;
 
   @override
   Stream<HomeState> mapEventToState(HomeEvents event) async* {
@@ -57,6 +58,28 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
           myLocation: event.location,
           loading: false
         );
+      } else if (event is OnMapTap) {
+        final markerId = MarkerId(this.state.markers.length.toString());
+        final info = InfoWindow(
+          title: 'Hello world ${markerId.value}',
+          snippet: 'La direccion etc.',
+        );
+        final marker = Marker(
+          markerId: markerId,
+          position: event.location,
+          onTap: (){
+            print('################################# hola a todos los pines $markerId.value');
+          },
+          draggable: true,
+          onDragEnd: (newPosition) {
+            print('```````````````````````` ${markerId.value} new position $newPosition');
+          },
+          infoWindow: info,
+        );
+
+        final markers = Map<MarkerId, Marker>.from(this.state.markers);
+        markers[markerId] = marker;
+        yield this.state.copyWith(markers: markers);
       }
   }
 }
