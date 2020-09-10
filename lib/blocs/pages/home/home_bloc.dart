@@ -16,7 +16,9 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
   
   Geolocator _geolocator = Geolocator();
   final LocationPermissions _locationPermissions = LocationPermissions();
+
   Completer<GoogleMapController> _completer = Completer();
+  final Completer<Marker> _myPositionMarker = Completer();
 
   final LocationOptions _locationOptions = LocationOptions(accuracy: LocationAccuracy.high, distanceFilter: 10);
 
@@ -71,6 +73,7 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
   }
 
   _init() async {
+    this._loadCarPin();
     _subscription = _geolocator.getPositionStream(_locationOptions).listen(
       (Position position) async { 
         if(position != null) {
@@ -92,6 +95,15 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
         add(OnGpsEnabled(status == ServiceStatus.enabled));
        });
     }
+  }
+
+  _loadCarPin() async {
+    final Uint8List bytes = await loadAsset('assets/car-pin.png');
+    final marker = Marker(
+      markerId: MarkerId('my_position_marker'),
+      icon: BitmapDescriptor.fromBytes(bytes),
+    );
+    this._myPositionMarker.complete(marker);
   }
 
   @override
@@ -123,11 +135,19 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
 
 
     polylines[this.myRoute.polylineId] = this.myRoute; 
+
+
+    final markers = Map<MarkerId, Marker>.from(this.state.markers);
+    final Marker myPositionMarker = (await this._myPositionMarker.future).copyWith(
+      positionParam: event.location
+    );
+    markers[myPositionMarker.markerId] = myPositionMarker;
     
     yield this.state.copyWith(
           myLocation: event.location,
           loading: false,
           polylines: polylines,
+          markers: markers,
         );
   }
 
@@ -138,7 +158,7 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
       title: 'Hello world ${markerId.value}',
       snippet: 'La direccion etc.',
     );
-    final Uint8List pinImage = await loadAsset('assets/car-pin.png', height: 100, width: 50);
+    final Uint8List pinImage = await loadAsset('assets/car-pin.png', width: 50);
     final customIcon = BitmapDescriptor.fromBytes(pinImage);
     final marker = Marker(
       markerId: markerId,
