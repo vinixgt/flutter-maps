@@ -97,11 +97,19 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
     }
   }
 
+  goToMyPosition() async {
+    if(this.state.myLocation != null); {
+      final cameraUpdate = CameraUpdate.newLatLng(this.state.myLocation);
+      (await _mapController).animateCamera(cameraUpdate);
+    }
+  }
+
   _loadCarPin() async {
     final Uint8List bytes = await loadAsset('assets/car-pin.png');
     final marker = Marker(
       markerId: MarkerId('my_position_marker'),
       icon: BitmapDescriptor.fromBytes(bytes),
+      anchor: Offset(0.5,0.5),
     );
     this._myPositionMarker.complete(marker);
   }
@@ -138,8 +146,16 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
 
 
     final markers = Map<MarkerId, Marker>.from(this.state.markers);
+
+    double rotation = 0;
+    LatLng lastPosition = this.state.myLocation;
+    if(lastPosition != null) {
+      rotation = getCoordsRotation(event.location, lastPosition);
+    }
+
     final Marker myPositionMarker = (await this._myPositionMarker.future).copyWith(
-      positionParam: event.location
+      positionParam: event.location,
+      rotationParam: rotation,
     );
     markers[myPositionMarker.markerId] = myPositionMarker;
     

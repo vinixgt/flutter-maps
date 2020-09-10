@@ -1,7 +1,9 @@
 import 'dart:ui' as ui;
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
+import 'dart:math' as math;
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 Future<Uint8List> loadAsset(String path, {
   //int height = 50, 
@@ -38,4 +40,16 @@ Future<Uint8List> loadImageUrl(String url, {
     return data.buffer.asUint8List();
   }
   throw new Exception('Download failed');
+}
+
+
+getCoordsRotation(LatLng curretnPosition, LatLng lastPosition) {
+    final dx = math.cos(math.pi * lastPosition.latitude/180)*(curretnPosition.longitude - lastPosition.longitude);
+
+    final dy = curretnPosition.latitude - lastPosition.latitude;
+
+    final angle = math.atan2(dy, dx);
+
+    return 90- angle * 180 / math.pi;
+
 }
