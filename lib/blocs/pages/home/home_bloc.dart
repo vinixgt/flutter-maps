@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io' show Platform;
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_maps/utils/extras.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,10 +23,30 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
   StreamSubscription<Position> _subscription;
   StreamSubscription<LocationPermissions> _subscriptionGpsStatus;
 
+  Polyline myRoute = Polyline(
+    polylineId: PolylineId('my_routes'),
+    width: 5,
+    color: Colors.red
+  );
+
+  /* Polyline myTaps = Polyline(
+    polylineId: PolylineId('my_taps'),
+    width: 5,
+    color: Colors.blue
+  ); */
+
+  Polygon myTaps = Polygon(
+    polygonId: PolygonId('my_polygon'),
+    fillColor: Colors.redAccent,
+    strokeColor: Colors.white
+  );
+  
+  
   Future <GoogleMapController> get _mapController async {
     return await _completer.future;
   }
 
+  
   
   HomeBloc() {
     this._init();
@@ -54,9 +75,9 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
       (Position position) async { 
         if(position != null) {
           final newPosition = LatLng(position.latitude, position.longitude);
-          final cameraUpdate = CameraUpdate.newLatLng(newPosition);
           add(OnMyLocationUpdate(newPosition));
-          (await _mapController).animateCamera(cameraUpdate);
+          // final cameraUpdate = CameraUpdate.newLatLng(newPosition);
+          // (await _mapController).animateCamera(cameraUpdate);
         }
 
 
@@ -68,7 +89,6 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
       //final bool enabled = await _geolocator.isLocationServiceEnabled();
 
       _locationPermissions.serviceStatus.listen((status) {
-        print('******************************* GPS Status $status');
         add(OnGpsEnabled(status == ServiceStatus.enabled));
        });
     }
@@ -81,16 +101,34 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
   @override
   Stream<HomeState> mapEventToState(HomeEvents event) async* {
       if(event is OnMyLocationUpdate) {
-    
-        yield this.state.copyWith(
-          myLocation: event.location,
-          loading: false
-        );
+        yield* this._mapOnMyLocationUpdate(event);
+        
       } else if (event is OnMapTap) {
         yield* this._mapOnTap(event);
       } else if (event is OnGpsEnabled) {
         yield this.state.copyWith(gpsEnabled: event.enabled);
       }
+  }
+
+  Stream<HomeState> _mapOnMyLocationUpdate(OnMyLocationUpdate event) async* {
+
+    //this.myRoute.points.add(event.location);
+    List<LatLng> points = List<LatLng>.from(this.myRoute.points);
+    points.add(event.location);
+
+    this.myRoute = this.myRoute.copyWith(pointsParam: points);
+
+    Map<PolylineId, Polyline> polylines = Map<PolylineId, Polyline>.from(this.state.polylines);
+    
+
+
+    polylines[this.myRoute.polylineId] = this.myRoute; 
+    
+    yield this.state.copyWith(
+          myLocation: event.location,
+          loading: false,
+          polylines: polylines,
+        );
   }
 
 
@@ -119,6 +157,26 @@ class HomeBloc extends Bloc<HomeEvents, HomeState> {
 
     final markers = Map<MarkerId, Marker>.from(this.state.markers);
     markers[markerId] = marker;
-    yield this.state.copyWith(markers: markers);
+
+    // List<LatLng> points = List<LatLng>.from(this.myTaps.points);
+    // points.add(event.location);
+
+    // this.myTaps = this.myTaps.copyWith(pointsParam: points);
+
+    // Map<PolylineId, Polyline> polylines = Map<PolylineId, Polyline>.from(this.state.polylines);
+    // polylines[this.myTaps.polylineId] = this.myTaps; 
+
+    // yield this.state.copyWith(markers: markers, poylines: polylines);
+
+    List<LatLng> points = List<LatLng>.from(this.myTaps.points);
+    points.add(event.location);
+
+    this.myTaps = this.myTaps.copyWith(pointsParam: points);
+
+    Map<PolygonId, Polygon> polygons = Map<PolygonId, Polygon>.from(this.state.polygons);
+    polygons[this.myTaps.polygonId] = this.myTaps;
+
+    //yield this.state.copyWith(markers: markers, poylines: polylines);
+    yield this.state.copyWith(markers: markers, polygons: polygons);
   }
 }

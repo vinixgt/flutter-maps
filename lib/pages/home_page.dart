@@ -77,6 +77,8 @@ class _HomePageState extends State<HomePage> {
                     this._bloc.add(OnMapTap(position));
                   },
                   markers: state.markers.values.toSet(),
+                  polylines: state.polylines.values.toSet(),
+                  polygons: state.polygons.values.toSet(),
                 );
               }
             ),
